@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<div id="vuebox">
+    <div class="container">
+        <!--数据列表-->
+        <div class="row">
+            <div class="center-block text-center">
+                <h2>学员信息列表</h2>
+                <a href="javascript:void (0)" @click="openAdd()">添加学员</a>
+                <table class="table table-bordered">
+                    <tr>
+                        <td>编号</td>
+                        <td>姓名</td>
+                        <td>性别</td>
+                        <td>年龄</td>
+                        <td>电话</td>
+                        <td>邮箱</td>
+                        <td>班级</td>
+                    </tr>
+                    <tr v-for="item in stulist">
+                        <td>{{item.id}}</td>
+                        <td>{{item.name}}</td>
+                        <td>{{item.gender}}</td>
+                        <td>{{item.age}}</td>
+                        <td>{{item.telephone}}</td>
+                        <td>{{item.email}}</td>
+                        <td v-for="items in classeslist" v-if="items.id==item.classid">
+                            {{items.name}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!-- 添加模态框-->
+        <div class="modal fade" id="AddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="myModalLabel">新增图书信息</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label>姓名:</label><input type="text" class="form-control" v-model="stu.name"/><br/>
+                        <label>性别:</label><input type="text" class="form-control" v-model="stu.gender"><br/>
+                        <label>年龄:</label><input type="text" class="form-control" v-model="stu.age"><br/>
+                        <label>电话:</label><input type="text" class="form-control" v-model="stu.telephone"><br/>
+                        <label>邮箱:</label><input type="text" class="form-control" v-model="stu.email"/><br/>
+                        <label>班级:</label>
+                        <select v-model="stu.classid">
+                            <option value="0">请选择</option>
+                            <option v-for="item in classeslist" :value="item.id">{{item.name}}</option>
+                        </select><br/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" >关闭</button>
+                        <a href="#" class="btn btn-primary" @click="save()">提交更改</a>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script type="text/javascript">
+    var vm=new Vue({
+        el:"#vuebox",
+        data:{
+            classeslist:[],
+            stulist:[],
+            stu:{name:null,age:0,gender:'男',telephone:null,email:null,classid:0}
+        },
+        mounted(){
+            this.queryClass();
+            this.querylist();
+        },
+        methods:{
+            queryClass:function () {
+                axios({url:"/classes/list", method:"post",
+                    params:{}})
+                    .then(res=>{this.classeslist=res.data});
+            },
+            querylist:function () {
+                axios({url:"/student/list", method:"post",
+                    params:{}})
+                    .then(res=>{this.stulist=res.data});
+            },
+            openAdd:function () {
+                $("#AddModal").modal("show");
+            }
+            ,
+            save:function () {
+                if(this.stu.name==null){
+                    alert("请填写学生姓名!");
+                    return false;
+                }
+                if(this.stu.classid==0){
+                    alert("请选择班级!");
+                    return false;
+                }
+                axios.post("/student/add",this.stu).then(res=>{
+                    if(res.data!=null){
+                    alert("添加学生成功!");
+                    this.stu={name:null,age:0,gender:'男',telephone:null,email:null,classid:0}
+                    this.querylist();
+                    $("#AddModal").modal("hide");
+                }else{
+                    alert("添加学生失败!");
+                }
+            })
+            }
+        }
+    })
+</script>
